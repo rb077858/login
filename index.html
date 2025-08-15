@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>כניסה עם גוגל</title>
+    <!-- טעינת ספריית Google Platform API. async ו-defer מבטיחים שהסקריפט לא יחסום את טעינת הדף -->
+    <script src="https://apis.google.com/js/platform.js" async defer></script>
+    <!-- הגדרת Client ID של האפליקציה שלך מגוגל קונסול. חובה לוודא שהוא נכון. -->
+    <meta name="google-signin-client_id" content="540551008302-7mbqpscpis0kv2oo1ebasrt1dhubptmr.apps.googleusercontent.com">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif; /* שימוש בפונט Inter */
+            background-color: #f0f4f8; /* רקע בהיר */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh; /* גובה מלא של המסך */
+            margin: 0;
+        }
+        .container {
+            background-color: #ffffff; /* רקע לבן לקונטיינר */
+            padding: 2.5rem; /* ריווח פנימי גדול יותר */
+            border-radius: 1.5rem; /* פינות מעוגלות יותר */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); /* צל עדין וגדול יותר */
+            text-align: center;
+            max-width: 400px; /* רוחב מרבי לקונטיינר */
+            width: 90%; /* רוחב רספונסיבי */
+        }
+        h1 {
+            color: #2d3748; /* צבע כהה לכותרת */
+            margin-bottom: 1.5rem; /* רווח תחתון לכותרת */
+        }
+        #welcomeMessage {
+            color: #4a5568; /* צבע טקסט בינוני */
+            font-size: 1.25rem; /* גודל טקסט גדול יותר */
+            margin-top: 2rem; /* רווח עליון להודעה */
+            min-height: 2.5rem; /* גובה מינימלי למניעת CLS */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #e2e8f0; /* רקע עדין להודעה */
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem; /* פינות מעוגלות להודעה */
+            transition: background-color 0.3s ease; /* אנימציית מעבר לרקע */
+        }
+        #welcomeMessage.show-name {
+            background-color: #d1fae5; /* רקע ירוק בהיר כאשר השם מוצג */
+            color: #10b981; /* צבע ירוק כהה לטקסט */
+            font-weight: bold;
+        }
+        .g-signin2 {
+            display: inline-block; /* כדי לאפשר מרכוז */
+            margin-top: 1rem; /* רווח מעל כפתור הכניסה */
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .g-signin2:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+        }
+        .sign-out-button {
+            background-color: #ef4444; /* אדום */
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-top: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease, transform 0.2s;
+        }
+        .sign-out-button:hover {
+            background-color: #dc2626; /* אדום כהה יותר */
+            transform: translateY(-1px);
+        }
+    </style>
+    <!-- הוספת פונט Inter מ-Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-3xl font-bold mb-6">ברוכים הבאים לאתר שלי!</h1>
+        <p class="text-lg text-gray-700 mb-8">התחבר/י עם חשבון הגוגל שלך כדי לראות את שמך.</p>
+
+        <!-- כפתור הכניסה של גוגל. data-onsuccess מציין איזו פונקציה תופעל לאחר כניסה מוצלחת. -->
+        <div class="g-signin2" data-onsuccess="onSignIn"></div>
+
+        <!-- כאן יוצג השם של המשתמש לאחר הכניסה -->
+        <p id="welcomeMessage" class="mt-8 text-xl font-semibold text-gray-700"></p>
+
+        <!-- כפתור יציאה (מוסתר בהתחלה) -->
+        <button id="signOutButton" class="sign-out-button hidden" onclick="signOut()">יציאה</button>
+    </div>
+
+    <script>
+        // פונקציה זו מופעלת כאשר המשתמש נכנס בהצלחה עם גוגל
+        function onSignIn(googleUser) {
+            // קבלת אובייקט הפרופיל הבסיסי של המשתמש
+            var profile = googleUser.getBasicProfile();
+            // קבלת השם המלא של המשתמש
+            var userName = profile.getName();
+
+            // מציאת אלמנט ה-p שבו נציג את השם
+            var welcomeMessageElement = document.getElementById("welcomeMessage");
+            // עדכון הטקסט של האלמנט כדי להציג את השם
+            welcomeMessageElement.innerHTML = "שלום, " + userName + "!";
+            // הוספת קלאס לעיצוב כשהשם מוצג
+            welcomeMessageElement.classList.add("show-name");
+
+            // הצגת כפתור היציאה
+            document.getElementById("signOutButton").classList.remove("hidden");
+        }
+
+        // פונקציה ליציאה מחשבון גוגל
+        function signOut() {
+            var auth2 = gapi.auth2.getAuthInstance();
+            auth2.signOut().then(function () {
+                console.log('User signed out.');
+                // איפוס הודעת הפתיחה והסרת הקלאס
+                var welcomeMessageElement = document.getElementById("welcomeMessage");
+                welcomeMessageElement.innerHTML = "";
+                welcomeMessageElement.classList.remove("show-name");
+                // הסתרת כפתור היציאה
+                document.getElementById("signOutButton").classList.add("hidden");
+            });
+        }
+    </script>
+</body>
+</html>
