@@ -4,8 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>כניסה עם גוגל</title>
-    <!-- טעינת ספריית Google Platform API. async ו-defer מבטיחים שהסקריפט לא יחסום את טעינת הדף -->
-    <script src="https://apis.google.com/js/platform.js" async defer></script>
+    <!-- טעינת ספריית Google Platform API. async ו-defer מבטיחים שהסקריפט לא יחסום את טעינת הדף. -->
+    <!-- הוספנו onload="onLoadGooglePlatform" כדי לוודא אתחול יזום. -->
+    <script src="https://apis.google.com/js/platform.js" async defer onload="onLoadGooglePlatform"></script>
     <!-- הגדרת Client ID של האפליקציה שלך מגוגל קונסול. חובה לוודא שהוא נכון. -->
     <meta name="google-signin-client_id" content="540551008302-7mbqpscpis0kv2oo1ebasrt1dhubptmr.apps.googleusercontent.com">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
@@ -98,12 +99,38 @@
     </div>
 
     <script>
+        // פונקציה זו מופעלת כאשר ספריית Google Platform נטענת
+        function onLoadGooglePlatform() {
+            console.log('Google platform.js loaded. Initializing gapi.auth2...');
+            gapi.load('auth2', function() {
+                gapi.auth2.init({
+                    client_id: '540551008302-7mbqpscpis0kv2oo1ebasrt1dhubptmr.apps.googleusercontent.com',
+                    scope: 'profile email' // בקשת הרשאות לפרופיל ואימייל
+                }).then(function () {
+                    console.log('Google Auth2 client initialized successfully.');
+                    // בדיקה אם המשתמש כבר מחובר (למקרה של רענון עמוד)
+                    var auth2 = gapi.auth2.getAuthInstance();
+                    if (auth2.isSignedIn.get()) {
+                        console.log('User already signed in. Displaying name.');
+                        onSignIn(auth2.currentUser.get());
+                    } else {
+                        console.log('User not signed in. Waiting for sign-in action.');
+                    }
+                }, function (error) {
+                    console.error('Error initializing Google Auth2 client:', error);
+                });
+            });
+        }
+
         // פונקציה זו מופעלת כאשר המשתמש נכנס בהצלחה עם גוגל
         function onSignIn(googleUser) {
+            console.log('onSignIn function called.');
             // קבלת אובייקט הפרופיל הבסיסי של המשתמש
             var profile = googleUser.getBasicProfile();
             // קבלת השם המלא של המשתמש
             var userName = profile.getName();
+
+            console.log('User Name:', userName); // הדפסת השם לקונסול לבדיקה
 
             // מציאת אלמנט ה-p שבו נציג את השם
             var welcomeMessageElement = document.getElementById("welcomeMessage");
@@ -118,9 +145,10 @@
 
         // פונקציה ליציאה מחשבון גוגל
         function signOut() {
+            console.log('Signing out...');
             var auth2 = gapi.auth2.getAuthInstance();
             auth2.signOut().then(function () {
-                console.log('User signed out.');
+                console.log('User signed out successfully.');
                 // איפוס הודעת הפתיחה והסרת הקלאס
                 var welcomeMessageElement = document.getElementById("welcomeMessage");
                 welcomeMessageElement.innerHTML = "";
